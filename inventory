@@ -1,0 +1,2 @@
+openvpnserver ansible_host=13.56.77.196
+openvpnca ansible_host=52.53.231.109

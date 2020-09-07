@@ -1,0 +1,30 @@
+---
+- name: Deploy of packages for openvpn
+  hosts: all
+  become: yes
+  become_user: root
+  tasks:
+    - name: ping
+      action: ping #apt: name=python state=installed
+    - name: update
+      command: apt-get update
+    - name: Get openvpn key and add to apt-key
+      apt_key:
+        url: https://swupdate.openvpn.net/repos/repo-public.gpg
+        state: present
+      become: true
+      become_user: root
+    - name: add openvpn repo to sourcelist
+      apt_repository:
+        repo: deb http://build.openvpn.net/debian/openvpn/stable bionic main
+        state: present
+      become: true
+    - name: install openvpn
+      apt:
+        name: openvpn
+        state: present
+    - name: download and unarchive EasyRSA
+      unarchive:
+        src: https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.4/EasyRSA-3.0.4.tgz
+        dest: /opt/
+        remote_src: yes
