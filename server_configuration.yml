@@ -139,12 +139,21 @@
   become_user: openvpn
   tasks:
     - name: ping
-      action: ping #apt: name=python state=installed
+      action: ping
 
     - name: copy from /tmp/ to /etc/openvpn/ remote server
+      become: yes
+      become_user: root
       copy:
-        src: /tmp/{server.crt,ca.crt}
+        src: /tmp/server.crt
         dest: /etc/openvpn/
+    - name: copy from /tmp/ to /etc/openvpn/ remote server
+      become: yes
+      become_user: root
+      copy:
+        src: /tmp/ca.crt
+        dest: /etc/openvpn/
+
 
     - name: gen-dh server
       command: /opt/EasyRSA-3.0.4/easyrsa gen-dh
@@ -157,6 +166,8 @@
         chdir: /opt/EasyRSA-3.0.4/
 
     - name: copy /EasyRSA-3.0.4/ta.key to /etc/openvpn/
+      become: yes
+      become_user: root
       copy:
         src: /opt/EasyRSA-3.0.4/ta.key
         dest: /etc/openvpn/
@@ -164,12 +175,16 @@
 
 
     - name: copy /EasyRSA-3.0.4/pki/dh.pem /etc/openvpn/
+      become: yes
+      become_user: root
       copy:
         src: /opt/EasyRSA-3.0.4/pki/dh.pem
         dest: /etc/openvpn/
         remote_src: yes
 
     - name: copy server.conf from present directory to /etc/openvpn/
+      become: yes
+      become_user: root
       copy:
         src: ./server.conf
         dest: /etc/openvpn/

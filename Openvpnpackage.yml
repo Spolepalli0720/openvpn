@@ -1,6 +1,6 @@
 ---
 - name: Deploy of packages for openvpn
-  hosts: all
+  hosts: openvpnca,openvpnserver
   become: yes
   become_user: root
   tasks:

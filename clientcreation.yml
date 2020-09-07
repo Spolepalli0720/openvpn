@@ -13,6 +13,13 @@
         path: ~/client-configs/keys
         state: directory
         mode: '0700'
+    - name: create directory in openvpn for clients
+      become: true
+      become_user: openvpn
+      file:
+        path: ~/client-configs/files
+        state: directory
+        mode: '0700'
 
     - name: add data to file vars
       blockinfile:
@@ -22,25 +29,25 @@
           set_var EASYRSA_REQ_PROVINCE   "Telangana"
           set_var EASYRSA_REQ_CITY       "Hyderabad"
           set_var EASYRSA_REQ_ORG        "digitaldots.ai"
-          set_var EASYRSA_REQ_EMAIL      "sathish@digitaldots.ai"
+          set_var EASYRSA_REQ_EMAIL      "ramaniattli@digitaldots.ai"
           set_var EASYRSA_REQ_OU         "DigitalDots"
-          set_var EASYRSA_REQ_CN         "sathish"
+          set_var EASYRSA_REQ_CN         "ramaniattli"
           set_var EASYRSA_BATCH           "15"
 
     - name: gen-req client
-      command: /opt/EasyRSA-3.0.4/easyrsa gen-req sathish nopass
+      command: /opt/EasyRSA-3.0.4/easyrsa gen-req ramaniattli nopass
       args:
         chdir: /opt/EasyRSA-3.0.4/
 
-    - name: copy pki/private/sathish.key ~/client-configs/keys/
+    - name: copy pki/private/ramaniattli.key ~/client-configs/keys/
       copy:
-        src: /opt/EasyRSA-3.0.4/pki/private/sathish.key
+        src: /opt/EasyRSA-3.0.4/pki/private/ramaniattli.key
         dest: ~/client-configs/keys/
         remote_src: yes
 
-    - name: copy private sathish.req to openvpn /tmp local
+    - name: copy private ramaniattli.req to openvpn /tmp local
       fetch:
-        src: /opt/EasyRSA-3.0.4/pki/reqs/sathish.req
+        src: /opt/EasyRSA-3.0.4/pki/reqs/ramaniattli.req
         dest: /tmp/
         flat: yes
 
@@ -56,37 +63,37 @@
       become: true
       become_user: openvpn
       copy:
-        src: /tmp/sathish.req
+        src: /tmp/ramaniattli.req
         dest: /tmp/
 
     - name: import-request client
-      command: /opt/EasyRSA-3.0.4/easyrsa import-req /tmp/sathish.req sathish
+      command: /opt/EasyRSA-3.0.4/easyrsa import-req /tmp/ramaniattli.req ramaniattli
       args:
         chdir: /opt/EasyRSA-3.0.4/
 
-    - name: sign-req sathish
-      command: /opt/EasyRSA-3.0.4/easyrsa sign-req client sathish
+    - name: sign-req ramaniattli
+      command: /opt/EasyRSA-3.0.4/easyrsa sign-req client ramaniattli
       args:
         chdir: /opt/EasyRSA-3.0.4/
 
     - name: delete file after copy from /tmp to CA remote server
       file:
-        path: /tmp/sathish.req
+        path: /tmp/ramaniattli.req
         state: absent
 
     - name: delay
       command: sleep 2
 
-    - name: copy private sathish.crt from CAserver to local
+    - name: copy private ramaniattli.crt from CAserver to local
       become: true
       become_user: openvpn
       fetch:
-        src: /opt/EasyRSA-3.0.4/pki/issued/sathish.crt
+        src: /opt/EasyRSA-3.0.4/pki/issued/ramaniattli.crt
         dest: /tmp/   #doubt
         remote_src: yes
         flat: yes
 
-- name: copy CAsigned files /tmp/sathish.crt ~/client-configs/keys/
+- name: copy CAsigned files /tmp/ramaniattli.crt ~/client-configs/keys/
   hosts: openvpnserver
   become: true
   become_user: openvpn
@@ -94,25 +101,25 @@
     - name: ping
       action: ping #apt: name=python state=installed
 
-    - name: copy CAsigned files /tmp/sathish.crt ~/client-configs/keys/
+    - name: copy CAsigned files /tmp/ramaniattli.crt ~/client-configs/keys/
       copy:
-        src: /tmp/sathish.crt
+        src: /tmp/ramaniattli.crt
         dest: ~/client-configs/keys/
 
 
-#    - name: copy ~/EasyRSA-3.0.4/ta.key ~/client-configs/keys/
-#      copy:
-#        src: /opt/EasyRSA-3.0.4/ta.key
-#        dest: ~/client-configs/keys/
-#        remote_src: yes
+    - name: copy ~/EasyRSA-3.0.4/ta.key ~/client-configs/keys/
+      copy:
+        src: /opt/EasyRSA-3.0.4/ta.key
+        dest: ~/client-configs/keys/
+        remote_src: yes
 
-#    - name: sudo cp /etc/openvpn/ca.crt ~/client-configs/keys/
-#      become_user: ubuntu
-#      become: true
-#      copy:
-#        src: /etc/openvpn/ca.crt
-#        dest: ~/client-configs/keys/
-#        remote_src: yes
+    - name: sudo cp /etc/openvpn/ca.crt ~/client-configs/keys/
+      become_user: root
+      become: true
+      copy:
+        src: /etc/openvpn/ca.crt
+        dest: /home/openvpn/client-configs/keys/
+        remote_src: yes
 
     - name: copy /usr/share/doc/openvpn/examples/sample-config-files/client.conf ~/client-configs/base.conf
       become: true
@@ -127,7 +134,7 @@
       lineinfile:
         path: ~/client-configs/base.conf
         regexp: '^remote my-server-1 1194'
-        line: remote 13.56.77.196 443
+        line: remote 54.153.78.243 443
         mode: '0644'
 
     - name: Replace ;proto tcp
@@ -201,6 +208,13 @@
           ; down-pre
           ; dhcp-option DOMAIN-ROUTE .
 
+    - name: copy make_config.sh from present directory to /home/openvpn/client-configs/
+      become: yes
+      become_user: openvpn
+      copy:
+        src: ./make_config.sh
+        dest: /home/openvpn/client-configs/
+
     - name: ~/client-configs/make_config.sh
       blockinfile:
         path: ~/client-configs/make_config.sh
@@ -215,8 +229,16 @@
           ${KEY_DIR}/${1}.key <(echo -e '</key>\n<tls-auth>') \
           ${KEY_DIR}/ta.key <(echo -e '</tls-auth>') > ${OUTPUT_DIR}/${1}.ovpn
 
+    - name: make ovpem file
+      become: true
+      become_user: openvpn
+      command: chmod 777 /home/openvpn/client-configs/make_config.sh
+      args:
+        chdir: /home/openvpn/client-configs/
 
     - name: make ovpem file
       become: true
       become_user: openvpn
-      command: '/home/openvpn/client-configs/make_config.sh sathish'
+      command: '/home/openvpn/client-configs/make_config.sh ramaniattli'
+      args:
+        chdir: /home/openvpn/client-configs/

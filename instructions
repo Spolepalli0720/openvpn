@@ -1,0 +1,4 @@
+add ip to inventory file
+add ssh key for ansible
+install python for ansible
+add the server ip in the clinet file
