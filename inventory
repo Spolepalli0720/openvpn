@@ -1,2 +1,2 @@
-openvpnserver ansible_host=54.153.78.243
-openvpnca ansible_host=54.153.9.235
+openvpnserver ansible_host=54.215.244.132
+openvpnca ansible_host=54.183.239.130
